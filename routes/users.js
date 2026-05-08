@@ -1,11 +1,11 @@
 var express = require('express');
-const { getAccount, getOne, editAccount } = require('../db/user_request');
+const { getAccount, editAccount, getUsers } = require('../db/user_request');
 var router = express.Router();
 
 /* GET users listing. */
 router.get('/me', function(req, res, next) {
   const email = req.auth.email;
-
+    console.log('REQ.AUTH:', req.auth);
   getAccount(email, (err, [account]) => {
     if(err) { return next(err); }
     if(!account) { return res.sendStatus(404); }
@@ -35,7 +35,7 @@ router.put('/edit', function(req, res, next) {
 
   const email = req.auth.email; 
   console.log('email:', email);
-console.log('updates:', updates);
+  console.log('updates:', updates);
 
   editAccount(email, updates, (err, user) => {
     console.log(err);
@@ -44,11 +44,10 @@ console.log('updates:', updates);
   })
 });
 
-router.get('/:id', function (req, res, next) {
-  const user_id = req.params.id;
-  getOne('users', user_id, (err, user) => {
+router.get('/get-all-users', function (req, res, next) {
+  getUsers( (err, user) => {
     if(err) { return next(err);}
-    if(!user.length){ return res.sendStatus(404);}
+    if(!user.length){ return res.json(user);}
     res.send(user);
   });
 });

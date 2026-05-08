@@ -1,7 +1,8 @@
 const db = require('./config');
 
-function getUsers(table, callback) {
-    db.any(`SELECT * FROM ${table}`)
+//Getting all users
+function getUsers(callback) {
+    db.any(`SELECT * FROM users`)
     .then(data => {
         callback(null, data);
     })
@@ -11,14 +12,11 @@ function getUsers(table, callback) {
     });
 }
 
-function getOne(table, id, callback) { 
-    db.any(`SELECT * FROM ${table} WHERE user_id = $1`, id)
-    .then(data => {
-        callback(null, data);
-    })
-    .catch(error => {
-        callback(error, null);
-        console.log('ERROR:', error);
+//Get one account by id
+function getUserById(user, callback){ 
+    db.any(`SELECT * FROM users WHERE user_id = $1`, [user])
+    .then(data => callback(null, data))
+    .catch(error => { callback(error, null);
     });
 }
 
@@ -39,8 +37,8 @@ function create(table, item, callback) {
     });
 }
 //Login user
-function getAccount(user, callback) { 
-    db.any(`SELECT * FROM users WHERE email = '${user}'`)
+function getAccount(email, callback) { 
+    db.any(`SELECT * FROM users WHERE email = $1`, [email])
     .then(data => {
         callback(null, data);
     })
@@ -67,7 +65,7 @@ function editAccount(email, cols, callback) {
 
 module.exports = {
     getUsers,
-    getOne,
+    getUserById,
     create,
     getAccount,
     editAccount

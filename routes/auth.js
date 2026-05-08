@@ -3,7 +3,7 @@ var bcrypt = require('bcrypt');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const { create, getAccount } = require('../db/user_request');
+const { create, getAccount, } = require('../db/user_request');
 const e = require('express');
 
 /* POST create a new user. */

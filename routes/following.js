@@ -8,7 +8,8 @@ router.post('/:id/toggle-follow', function(req, res, next){
 
     toggleFollow(emailA, userB_id, (err, result) => {
         if(err) { return next(err); }
-        res.json(result);
+        const action = result.length > 0 ? 'followed' : 'unfollowed';
+        res.json({ action, result });
     });
 });
 

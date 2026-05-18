@@ -14,7 +14,16 @@ function getUsers(callback) {
 
 //Get one account by id
 function getUserById(user, callback){ 
-    db.any(`SELECT * FROM users WHERE user_id = $1`, [user])
+    db.any(`
+        SELECT u.*, 
+        ARRAY_AGG(DISTINCT f.following_id) FILTER (WHERE f.following_id IS NOT NULL) AS following,
+        ARRAY_AGG(DISTINCT f2.follower_id) FILTER (WHERE f2.follower_id IS NOT NULL) AS followers
+        FROM users u
+        LEFT JOIN follows f ON u.user_id = f.follower_id
+        LEFT JOIN follows f2 ON u.user_id = f2.following_id
+        WHERE u.user_id = $1
+        GROUP BY u.user_id
+        `, [user])
     .then(data => callback(null, data))
     .catch(error => { callback(error, null);
     });
@@ -38,10 +47,17 @@ function create(table, item, callback) {
 }
 //Login user
 function getAccount(email, callback) { 
-    db.any(`SELECT * FROM users WHERE email = $1`, [email])
-    .then(data => {
-        callback(null, data);
-    })
+    db.any(`
+        SELECT u.*, 
+        ARRAY_AGG(DISTINCT f.following_id) FILTER (WHERE f.following_id IS NOT NULL) AS following,
+        ARRAY_AGG(DISTINCT f2.follower_id) FILTER (WHERE f2.follower_id IS NOT NULL) AS followers
+        FROM users u
+        LEFT JOIN follows f ON u.user_id = f.follower_id
+        LEFT JOIN follows f2 ON u.user_id = f2.following_id
+        WHERE u.email = $1
+        GROUP BY u.user_id
+    `, [email])
+    .then(data => callback(null, data))
     .catch(error => {
         callback(error, null);
         console.log('ERROR:', error);

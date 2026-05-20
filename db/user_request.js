@@ -79,10 +79,31 @@ function editAccount(email, cols, callback) {
     })
 }
 
+//List of followers and following users
+function getFollowersList(user, callback){
+    db.any(`
+        SELECT u.* FROM users u
+        JOIN follows f ON u.user_id = f.follower_id
+        WHERE f.following_id = $1`, [user])
+        .then(data => callback(null, data))
+        .catch(error => callback(error, null));
+}
+
+function getFollowingList(user, callback){
+    db.any(`
+        SELECT u.* FROM users u
+        JOIN follows f ON u.user_id = f.following_id
+        WHERE f.follower_id = $1  `, [user])
+        .then(data => callback(null, data))
+        .catch(error => callback(error, null));
+}
+
 module.exports = {
     getUsers,
     getUserById,
     create,
     getAccount,
-    editAccount
+    editAccount,
+    getFollowersList,
+    getFollowingList,
 };

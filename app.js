@@ -31,6 +31,7 @@ app.use(jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256']}).unless({pa
   '/api/users/get-all-users',
   { url: /^\/api\/public\/users\/[^/]+$/, methods: ['GET'] },
   { url: /^\/api\/public\/posts\/[^/]+$/, methods: ['GET'] },
+  { url: /^\/api\/public\/[^/]+\/follows$/, methods: ['GET'] },
 ]}));
 
 app.use('/api', indexRouter);

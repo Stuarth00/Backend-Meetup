@@ -1,23 +1,30 @@
 const db = require('./config');
 
-function createPost(email, item, callback) {
+function createPost(email, description, mediaUrls, callback) {
     db.any(`SELECT user_id FROM users WHERE email = $1`, [email])
     .then(userData => {
         const user_id = userData[0].user_id;
-        const keys = Object.keys(item);
-        const properties = ['author_id', ...keys].join(', ');
-        const placeholders = ['$1', ...keys.map((_, i) => `$${i + 2}`)].join(', ');
-        const values = [user_id, ...keys.map(key => item[key])];
 
+        return db.any(`
+            INSERT INTO posts (author_id, description) 
+            VALUES ($1, $2) 
+            RETURNING *
+        `, [user_id, description]);
+    })
+    .then(postData => {
+        const post_id = postData[0].post_id;
 
-        return db.any(
-            `INSERT INTO posts (${properties}) VALUES(${placeholders}) RETURNING *`, 
-            values
+        const mediaInserts = mediaUrls.map(url => 
+            db.any(`
+                INSERT INTO post_media (post_id, content_url) 
+                VALUES ($1, $2)
+            `, [post_id, url])
         );
+        return Promise.all(mediaInserts).then(() => postData);
     })
     .then(data => callback(null, data))
     .catch(error => {
-        console.log('ERROR', error); 
+        console.log('ERROR', error);
         callback(error, null);
     });
 }
@@ -27,14 +34,18 @@ function getPost(email, callback) {
     .then(userData => {
         const user_id = userData[0].user_id;
 
-        return db.any(
-            `SELECT * FROM posts WHERE author_id = $1`, [user_id]
-        );
+        return db.any(`
+            SELECT p.*, 
+            ARRAY_AGG(pm.content_url) FILTER (WHERE pm.content_url IS NOT NULL) AS content_urls
+            FROM posts p
+            LEFT JOIN post_media pm ON p.post_id = pm.post_id
+            WHERE p.author_id = $1
+            GROUP BY p.post_id
+        `, [user_id]);
     })
     .then(data => callback(null, data))
     .catch(error => {
         callback(error, null);
-        // console.log('ERROR: ', error);
     });
 }
 

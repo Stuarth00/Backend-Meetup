@@ -1,6 +1,14 @@
+require('dotenv').config();
 var express = require('express');
+const cloudinary = require('cloudinary').v2;
 const { getAccount, editAccount, getUsers } = require('../db/user_request');
 var router = express.Router();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 /* GET users listing. */
 router.get('/me', function(req, res, next) {
@@ -19,29 +27,37 @@ router.get('/me', function(req, res, next) {
 router.put('/edit', function(req, res, next) { 
   if(!req.auth) { return res.sendStatus(401); }
 
-  console.log('req.auth:', req.auth); // ← add this first
-  console.log('req.body:', req.body);
   const allowedFields = ['first_name', 'last_name', 'about_me', 'location', 'avatar', 'gender', 'interests'];
-  const updates = Object.keys(req.body)
-    .filter(key => allowedFields.includes(key))
-    .reduce((obj, key) => { 
-      obj[key] =  req.body[key];
-      return obj;
-    }, {} );
+  
+  const processUpdate = () => {
+    const updates = Object.keys(req.body)
+      .filter(key => allowedFields.includes(key))
+      .reduce((obj, key) => { 
+        obj[key] = req.body[key];
+        return obj;
+      }, {});
 
-  if(Object.keys(updates).length === 0) { 
-    return res.status(400).json({ message: 'No valid fields to update' });
+    if(Object.keys(updates).length === 0) { 
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
+
+    const email = req.auth.email;
+    editAccount(email, updates, (err, user) => {
+      if(err) { return next(err); }
+      res.send(user);
+    });
+  };
+
+  if(req.body.avatar) {
+    cloudinary.uploader.upload(req.body.avatar)
+    .then(upload_result => {
+      req.body.avatar = upload_result.secure_url; 
+      processUpdate();
+    })
+    .catch(err => next(err));
+  } else {
+    processUpdate();
   }
-
-  const email = req.auth.email; 
-  console.log('email:', email);
-  console.log('updates:', updates);
-
-  editAccount(email, updates, (err, user) => {
-    console.log(err);
-    if(err) { return next(err); }
-    res.send(user);
-  })
 });
 
 router.get('/get-all-users', function (req, res, next) {

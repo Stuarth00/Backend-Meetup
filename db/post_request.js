@@ -36,7 +36,11 @@ function getPost(email, callback) {
 
         return db.any(`
             SELECT p.*, 
-            ARRAY_AGG(pm.content_url) FILTER (WHERE pm.content_url IS NOT NULL) AS content_urls
+            JSON_AGG( JSON_BUILD_OBJECT(
+                'media_id', pm.media_id,
+                'content_url', pm.content_url
+                )) 
+            FILTER (WHERE pm.content_url IS NOT NULL) AS media
             FROM posts p
             LEFT JOIN post_media pm ON p.post_id = pm.post_id
             WHERE p.author_id = $1
@@ -51,25 +55,29 @@ function getPost(email, callback) {
 
 function getAllPosts( callback) { 
     db.any(`
-        SELECT 
-            p.post_id, 
-            p.author_id, 
-            u_author.first_name AS author_first_name, 
-            u_author.last_name AS author_last_name,
-            p.description, 
-            p.created_at,
-            ARRAY_AGG(DISTINCT pm.content_url) AS content_urls, 
-            ARRAY_AGG(DISTINCT u_likes.first_name) AS likes,
-            JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('username', u_comments.first_name, 'text', c.comment)) AS comments
-        FROM posts p
-        LEFT JOIN users u_author ON p.author_id = u_author.user_id 
-        LEFT JOIN post_media pm ON p.post_id = pm.post_id
-        LEFT JOIN likes l ON p.post_id = l.post_id
-        LEFT JOIN users u_likes ON l.user_id = u_likes.user_id
-        LEFT JOIN comments c ON p.post_id = c.post_id
-        LEFT JOIN users u_comments ON c.user_id = u_comments.user_id
-        GROUP BY p.post_id, u_author.first_name, u_author.last_name 
-        ORDER BY p.created_at DESC
+    SELECT 
+        p.post_id, 
+        p.author_id, 
+        u_author.first_name AS author_first_name, 
+        u_author.last_name AS author_last_name,
+        u_author.avatar AS author_avatar,
+        p.description, 
+        p.created_at,
+        JSON_AGG(JSON_BUILD_OBJECT(
+            'media_id', pm.media_id,
+            'content_url', pm.content_url
+        )) FILTER (WHERE pm.content_url IS NOT NULL) AS media,
+        ARRAY_AGG(DISTINCT u_likes.first_name) AS likes,
+        JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('username', u_comments.first_name, 'text', c.comment)) AS comments
+    FROM posts p
+    LEFT JOIN users u_author ON p.author_id = u_author.user_id 
+    LEFT JOIN post_media pm ON p.post_id = pm.post_id
+    LEFT JOIN likes l ON p.post_id = l.post_id
+    LEFT JOIN users u_likes ON l.user_id = u_likes.user_id
+    LEFT JOIN comments c ON p.post_id = c.post_id
+    LEFT JOIN users u_comments ON c.user_id = u_comments.user_id
+    GROUP BY p.post_id, u_author.first_name, u_author.last_name, u_author.avatar 
+    ORDER BY p.created_at DESC
     `)
     .then(data => { callback(null, data); 
     })

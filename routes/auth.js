@@ -4,7 +4,7 @@ var router = express.Router();
 var jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { create, getAccount, } = require('../db/user_request');
-const e = require('express');
+
 
 /* POST create a new user. */
 router.post('/signup',
@@ -17,13 +17,23 @@ router.post('/signup',
     if(!errors.isEmpty()) {
       return res.status(400).json({errors: errors.array()});
     } 
-    console.log(req.body);
     const newUser = req.body;
     bcrypt.hash(newUser.password, 12, (err, hash) => {
       if(err) { return next(err); }
       create('users', {...newUser, password: hash}, (err, user) => {
-        if(err) { return next(err); }
-        res.send(user);
+      if(err) { 
+          if(err.code === '23505') {
+          return res.status(409).json({ message: 'Email already in use' });
+      }
+      return next(err); 
+  }
+        
+        const token = jwt.sign({
+          exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7),
+          email: newUser.email  
+        }, process.env.JWT_SECRET);
+
+        res.send({ token }); 
       })
     })
 });

@@ -67,7 +67,12 @@ function getAllPosts( callback) {
             'media_id', pm.media_id,
             'content_url', pm.content_url
         )) FILTER (WHERE pm.content_url IS NOT NULL) AS media,
-        ARRAY_AGG(DISTINCT u_likes.first_name) AS likes,
+
+         COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+            'user_id', u_likes.user_id,
+            'first_name', u_likes.first_name
+        )) FILTER (WHERE u_likes.first_name IS NOT NULL), '[]'ç) AS likes,
+
         JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('username', u_comments.first_name, 'text', c.comment)) AS comments
     FROM posts p
     LEFT JOIN users u_author ON p.author_id = u_author.user_id 

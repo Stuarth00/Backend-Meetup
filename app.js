@@ -17,6 +17,7 @@ var postsRouter = require('./routes/posts');
 var followRouter = require('./routes/following');
 var publicRouter = require('./routes/public');
 var likeRouter = require('./routes/like');
+var commentRouter = require('./routes/comments');
 
 app.use(cors());
 
@@ -43,6 +44,7 @@ app.use('/api/posts', postsRouter);
 app.use('/api/following', followRouter);
 app.use('/api/public', publicRouter);
 app.use('/api/like', likeRouter);
+app.use('/api/comments', commentRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

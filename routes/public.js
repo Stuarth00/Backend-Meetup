@@ -22,6 +22,7 @@ router.get('/posts/:id', function(req, res, next) {
         if(err) { return next(err); }
         if(!posts.length) { return res.send(posts); }
         res.send(posts);
+        console.log(posts);
     })
 })
 

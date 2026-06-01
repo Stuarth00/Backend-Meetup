@@ -4,10 +4,10 @@ const pgp = require('pg-promise')(initialOptions);
 
 const cn = {
     user: process.env.DB_USER, 
-    password: process.env.DB_PASSWORD, 
     host: process.env.DB_HOST,
-    port : process.env.DB_PORT, 
-    database: process.env.DB_NAME
+    port: parseInt(process.env.DB_PORT, 10), 
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD, 
 }
 
 const db = pgp(cn)

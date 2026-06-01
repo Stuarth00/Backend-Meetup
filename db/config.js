@@ -12,4 +12,15 @@ const cn = {
 
 const db = pgp(cn)
 
+db.connect()
+  .then(obj => {
+    console.log('Database connected successfully');
+    obj.done();
+  })
+  .catch(error => {
+    console.error('Database connection failed:', error);
+  });
+
+
+
 module.exports = db;

@@ -59,7 +59,7 @@ function getAccount(email, callback) {
     `, [email])
     .then(data => callback(null, data))
     .catch(error => {
-        callback(error, null);
+        callback(error, []);
         console.log('ERROR:', error);
     });
 }

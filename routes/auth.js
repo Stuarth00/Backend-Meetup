@@ -47,8 +47,10 @@ router.post('/login',
 
     const login = req.body;
     
-    getAccount( login.email, (err, [account]) => {
+    getAccount( login.email, (err, accounts) => {
       if(err) { return next(err); }
+
+      const account = accounts[0];
       if(!account) { return res.sendStatus(404); }
 
       bcrypt.compare(login.password, account.password, (err, result) => {

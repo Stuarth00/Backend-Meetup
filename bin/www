@@ -24,10 +24,20 @@ var server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
-
+console.log("Server booting...");
+console.log("PORT =", port);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  console.log('Listening on ' + bind);
+  debug('Listening on ' + bind);
+}
 
 /**
  * Normalize a port into a number, string, or false.

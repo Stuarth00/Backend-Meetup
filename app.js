@@ -10,6 +10,10 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var { expressjwt: jwt } = require("express-jwt");
 
+app.get("/", (req, res) => {
+  res.status(200).send("Backend alive");
+});
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');

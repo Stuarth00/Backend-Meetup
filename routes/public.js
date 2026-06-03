@@ -1,6 +1,6 @@
 var express = require('express');
 const { getUserById, getFollowersList, getFollowingList } = require('../db/user_request');
-const { getPostById } = require('../db/post_request');
+const { getPostById, getAllPosts, getPostByUserId } = require('../db/post_request');
 var router = express.Router();
 
 router.get('/users/:id', function(req, res, next) {
@@ -16,15 +16,31 @@ router.get('/users/:id', function(req, res, next) {
   })
 });
 
-router.get('/posts/:id', function(req, res, next) {
-    const user_id = req.params.id;
-    getPostById(user_id, (err, posts) => {
+//Get data from a post by post_id
+router.get('/posts/:post_id', function(req, res, next) {
+    const post_id = req.params.post_id;  
+    
+    getPostById(post_id, (err, post) => {
         if(err) { return next(err); }
-        if(!posts.length) { return res.send(posts); }
-        res.send(posts);
-        console.log(posts);
+
+        if(!post.length) { return res.sendStatus(404); }
+
+        res.json(post[0])
+        console.log(post[0]);
     })
 })
+
+//Get posts by user_id
+router.get('/users/:id/posts', function(req, res, next) {
+  const user_id = req.params.id;
+  
+  getPostByUserId(user_id, (err, posts) => {
+    if(err) { return next(err); }
+    if(!posts.length) { return res.sendStatus(404); }
+    res.json(posts);
+    console.log(posts);
+  })
+});
 
 //Get list of follow
 router.get('/:id/follows', function(req, res, next) {
@@ -46,7 +62,16 @@ router.get('/:id/follows', function(req, res, next) {
 
     return res.status(400).send("Invalid or missing type query parameter");
   }
-})
+});
+
+
+router.get('/all-posts', function(req, res, next) { 
+  getAllPosts((err, posts) => {
+    if(err) { return next(err); }
+    if(!posts.length) { return res.sendStatus(404); }
+    res.json(posts);
+  });
+});
 
 
 module.exports = router;

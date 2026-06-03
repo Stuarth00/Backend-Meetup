@@ -1,3 +1,4 @@
+const { post } = require('../routes');
 const db = require('./config');
 
 function createPost(email, description, mediaUrls, callback) {
@@ -29,7 +30,8 @@ function createPost(email, description, mediaUrls, callback) {
     });
 }
 
-function getPost(email, callback) { 
+//Getting posts by user email
+function getMyPost(email, callback) { 
     db.any(`SELECT user_id FROM users WHERE email = $1`, [email])
     .then(userData => {
         const user_id = userData[0].user_id;
@@ -47,6 +49,28 @@ function getPost(email, callback) {
             GROUP BY p.post_id
         `, [user_id]);
     })
+    .then(data => callback(null, data))
+    .catch(error => {
+        callback(error, null);
+    });
+}
+
+//Getting posts by user ID
+function getPostByUserId(user_id, callback) {
+    db.any(`
+        SELECT p.*, 
+        JSON_AGG( JSON_BUILD_OBJECT(
+            'media_id', pm.media_id,
+            'content_url', pm.content_url
+            )) 
+        FILTER (WHERE pm.content_url IS NOT NULL) AS media
+
+        FROM posts p
+
+        LEFT JOIN post_media pm ON p.post_id = pm.post_id
+        WHERE p.author_id = $1
+        GROUP BY p.post_id
+    `, [user_id])
     .then(data => callback(null, data))
     .catch(error => {
         callback(error, null);
@@ -114,21 +138,61 @@ function getAllPosts( callback) {
     });
 }
 
-//Public getting posts by id
-function getPostById(user, callback){ 
+//Public getting posts by post id
+function getPostById(post_id, callback){ 
     db.any(`
-        SELECT p.*, 
-        JSON_AGG( JSON_BUILD_OBJECT(
-            'media_id', pm.media_id,
-            'content_url', pm.content_url
-            )) 
-        FILTER (WHERE pm.content_url IS NOT NULL) AS media
+        SELECT
+            p.post_id,
+            p.author_id,
+            u_author.first_name AS author_first_name,
+            u_author.last_name AS author_last_name,
+            u_author.avatar AS author_avatar,
+            p.description,
+            p.created_at,
+            COALESCE(media.media, '[]') AS media,
+            COALESCE(likes.likes, '[]') AS likes,
+            COALESCE(comments.comments, '[]') AS comments
 
         FROM posts p
-        LEFT JOIN post_media pm ON p.post_id = pm.post_id
-        WHERE p.author_id = $1
-        GROUP BY p.post_id
-        `, [user])
+        LEFT JOIN users u_author ON p.author_id = u_author.user_id
+
+        -- media subquery
+        LEFT JOIN (
+            SELECT post_id, JSON_AGG(JSON_BUILD_OBJECT(
+                'media_id', media_id,
+                'content_url', content_url
+            )) AS media
+        FROM post_media
+        GROUP BY post_id
+        ) media ON p.post_id = media.post_id
+
+        -- likes subquery
+        LEFT JOIN (
+            SELECT l.post_id, JSON_AGG(JSON_BUILD_OBJECT(
+                'user_id', u.user_id,
+              'first_name', u.first_name
+            )) AS likes
+         FROM likes l
+        LEFT JOIN users u ON l.user_id = u.user_id
+        GROUP BY l.post_id
+        ) likes ON p.post_id = likes.post_id
+
+        -- comments subquery
+        LEFT JOIN (
+            SELECT c.post_id, JSONB_AGG(JSONB_BUILD_OBJECT(
+                'comment_id', c.comment_id,
+                'username', u.first_name,
+                'text', c.comment,
+                'avatar', u.avatar,
+                'created_at', c.created_at
+            )) AS comments
+            FROM comments c
+        LEFT JOIN users u ON c.user_id = u.user_id
+        GROUP BY c.post_id
+        ) comments ON p.post_id = comments.post_id
+
+    WHERE p.post_id = $1
+        `, [post_id])
     .then(data => callback(null, data))
     .catch(error => { callback(error, null);
     });
@@ -136,7 +200,8 @@ function getPostById(user, callback){
 
 module.exports = {
     createPost,
-    getPost,
+    getMyPost,
     getAllPosts,
     getPostById,
+    getPostByUserId,
 }

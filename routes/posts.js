@@ -1,7 +1,7 @@
 require('dotenv').config();
 var express = require('express');
 const cloudinary = require('cloudinary').v2;
-const { createPost, getPost, getAllPosts } = require('../db/post_request');
+const { createPost, getMyPost, getPostByUserId } = require('../db/post_request');
 var router = express.Router();
 
 //Cloudinary configuration 
@@ -36,7 +36,7 @@ router.post('/create-post', function(req, res, next) {
 router.get('/me-posts', function(req, res, next) { 
   const email = req.auth.email; 
 
-  getPost(email, (err, posts) => {
+  getMyPost(email, (err, posts) => {
     if(err) { return next(err); }
     if(!posts.length) { return res.json(posts); }
 
@@ -44,13 +44,6 @@ router.get('/me-posts', function(req, res, next) {
   });
 });
 
-router.get('/all-posts', function(req, res, next) { 
-  getAllPosts((err, posts) => {
-    if(err) { return next(err); }
-    if(!posts.length) { return res.sendStatus(404); }
-    res.json(posts);
-    console.log(posts);
-  });
-});
+
 
 module.exports = router;

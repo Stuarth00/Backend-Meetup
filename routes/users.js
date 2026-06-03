@@ -27,7 +27,7 @@ router.get('/me', function(req, res, next) {
 router.put('/edit', function(req, res, next) { 
   if(!req.auth) { return res.sendStatus(401); }
 
-  const allowedFields = ['first_name', 'last_name', 'about_me', 'location', 'avatar', 'gender', 'interests'];
+  const allowedFields = ['first_name', 'last_name', 'about_me', 'location', 'avatar', 'genre', 'interests'];
   
   const processUpdate = () => {
     const updates = Object.keys(req.body)

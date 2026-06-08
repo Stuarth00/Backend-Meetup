@@ -1,4 +1,5 @@
 const db = require('./config');
+const { getPostById } = require('./post_request');
 
 function toggleLike(email, post_id, callback) {
     let userIdRef;
@@ -19,17 +20,16 @@ function toggleLike(email, post_id, callback) {
         }
     })
     .then(() => {
-        return db.any(`SELECT COUNT(*) FROM likes WHERE post_id = $1`, [post_id]);
+        return new Promise((resolve, reject) => {
+            getPostById(post_id, (err, data) => {
+                if(err) reject(err);
+                else resolve(data);
+            });
+        });
     })
-    .then(countData => { 
-        const totalLikes = parseInt(countData[0].count, 10);
-
-        callback(null, {
-            success: true, 
-            action: is_liked ? 'unliked' : 'liked', 
-            is_liked: !is_liked, 
-            likesCount: totalLikes
-        })
+    .then(updatedPost => { 
+        console.log("db sending", updatedPost);
+        callback(null, updatedPost);
     })
     .catch(error => {
         console.log('ERROR', error);

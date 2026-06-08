@@ -10,11 +10,8 @@ router.post('/:id/toggle-like', function(req, res, next){
         if(err) { 
             console.log('ERROR', err);
             return next(err); }
-        res.json({ success: result.success,
-            action: result.action,
-            is_liked: result.is_liked,
-            likesCount: result.likesCount
-         });
+        res.json(result);
+        console.log(result);
         console.log('Like toggled successfully:', { success: result.success, likesCount: result.likesCount, is_liked: result.is_liked });
     });
 });

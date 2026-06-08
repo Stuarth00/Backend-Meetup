@@ -1,5 +1,5 @@
 var express = require('express');
-const { getUserById, getFollowersList, getFollowingList } = require('../db/user_request');
+const { getUserById, getFollowersList, getFollowingList, getUsers } = require('../db/user_request');
 const { getPostById, getAllPosts, getPostByUserId } = require('../db/post_request');
 var router = express.Router();
 
@@ -23,7 +23,7 @@ router.get('/posts/:post_id', function(req, res, next) {
     getPostById(post_id, (err, post) => {
         if(err) { return next(err); }
 
-        if(!post.length) { return res.sendStatus(404); }
+        if(!post.length) { return res.json([]); }
 
         res.json(post[0])
         console.log(post[0]);
@@ -36,7 +36,7 @@ router.get('/users/:id/posts', function(req, res, next) {
   
   getPostByUserId(user_id, (err, posts) => {
     if(err) { return next(err); }
-    if(!posts.length) { return res.sendStatus(404); }
+    if(!posts.length) { return res.json([]); }
     res.json(posts);
     console.log(posts);
   })
@@ -62,6 +62,14 @@ router.get('/:id/follows', function(req, res, next) {
 
     return res.status(400).send("Invalid or missing type query parameter");
   }
+});
+
+router.get('/get-all-users', function (req, res, next) {
+  getUsers( (err, user) => {
+    if(err) { return next(err);}
+    if(!user.length){ return res.json(user);}
+    res.send(user);
+  });
 });
 
 

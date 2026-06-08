@@ -37,16 +37,57 @@ function getMyPost(email, callback) {
         const user_id = userData[0].user_id;
 
         return db.any(`
-            SELECT p.*, 
-            JSON_AGG( JSON_BUILD_OBJECT(
-                'media_id', pm.media_id,
-                'content_url', pm.content_url
-                )) 
-            FILTER (WHERE pm.content_url IS NOT NULL) AS media
-            FROM posts p
-            LEFT JOIN post_media pm ON p.post_id = pm.post_id
-            WHERE p.author_id = $1
-            GROUP BY p.post_id
+            SELECT 
+                p.post_id, 
+                p.author_id, 
+                u_author.first_name AS author_first_name, 
+                u_author.last_name AS author_last_name,
+                u_author.avatar AS author_avatar,
+                p.description, 
+                p.created_at,
+                COALESCE(media.media, '[]') AS media,
+                COALESCE(likes.likes, '[]') AS likes,
+                COALESCE(comments.comments, '[]') AS comments
+
+        FROM posts p
+        LEFT JOIN users u_author ON p.author_id = u_author.user_id
+
+        LEFT JOIN (
+            SELECT post_id, JSON_AGG(JSON_BUILD_OBJECT(
+                'media_id', media_id,
+                'content_url', content_url
+            )) AS media
+            FROM post_media
+            GROUP BY post_id
+        ) media ON p.post_id = media.post_id
+
+        LEFT JOIN (
+            SELECT l.post_id, JSON_AGG(JSON_BUILD_OBJECT(
+                'user_id', u.user_id,
+                'first_name', u.first_name
+            )) AS likes
+            FROM likes l
+            LEFT JOIN users u ON l.user_id = u.user_id
+            GROUP BY l.post_id
+        ) likes ON p.post_id = likes.post_id
+
+        LEFT JOIN (
+            SELECT c.post_id, JSONB_AGG(JSONB_BUILD_OBJECT(
+                'comment_id', c.comment_id,
+                'username', u.first_name,
+                'user_id', u.user_id,
+                'text', c.comment,
+                'avatar', u.avatar,
+                'created_at', c.created_at
+            )) AS comments
+             
+            FROM comments c
+            LEFT JOIN users u ON c.user_id = u.user_id
+            GROUP BY c.post_id
+        ) comments ON p.post_id = comments.post_id
+         
+        WHERE p.author_id = $1
+        ORDER BY p.created_at DESC
         `, [user_id]);
     })
     .then(data => callback(null, data))
@@ -58,18 +99,57 @@ function getMyPost(email, callback) {
 //Getting posts by user ID
 function getPostByUserId(user_id, callback) {
     db.any(`
-        SELECT p.*, 
-        JSON_AGG( JSON_BUILD_OBJECT(
-            'media_id', pm.media_id,
-            'content_url', pm.content_url
-            )) 
-        FILTER (WHERE pm.content_url IS NOT NULL) AS media
+            SELECT 
+                p.post_id, 
+                p.author_id, 
+                u_author.first_name AS author_first_name, 
+                u_author.last_name AS author_last_name,
+                u_author.avatar AS author_avatar,
+                p.description, 
+                p.created_at,
+                COALESCE(media.media, '[]') AS media,
+                COALESCE(likes.likes, '[]') AS likes,
+                COALESCE(comments.comments, '[]') AS comments
 
         FROM posts p
+        LEFT JOIN users u_author ON p.author_id = u_author.user_id
 
-        LEFT JOIN post_media pm ON p.post_id = pm.post_id
+        LEFT JOIN (
+            SELECT post_id, JSON_AGG(JSON_BUILD_OBJECT(
+                'media_id', media_id,
+                'content_url', content_url
+            )) AS media
+            FROM post_media
+            GROUP BY post_id
+        ) media ON p.post_id = media.post_id
+
+        LEFT JOIN (
+            SELECT l.post_id, JSON_AGG(JSON_BUILD_OBJECT(
+                'user_id', u.user_id,
+                'first_name', u.first_name
+            )) AS likes
+            FROM likes l
+            LEFT JOIN users u ON l.user_id = u.user_id
+            GROUP BY l.post_id
+        ) likes ON p.post_id = likes.post_id
+
+        LEFT JOIN (
+            SELECT c.post_id, JSONB_AGG(JSONB_BUILD_OBJECT(
+                'comment_id', c.comment_id,
+                'username', u.first_name,
+                'user_id', u.user_id,
+                'text', c.comment,
+                'avatar', u.avatar,
+                'created_at', c.created_at
+            )) AS comments
+             
+            FROM comments c
+            LEFT JOIN users u ON c.user_id = u.user_id
+            GROUP BY c.post_id
+        ) comments ON p.post_id = comments.post_id
+         
         WHERE p.author_id = $1
-        GROUP BY p.post_id
+        ORDER BY p.created_at DESC
     `, [user_id])
     .then(data => callback(null, data))
     .catch(error => {
@@ -119,6 +199,7 @@ function getAllPosts( callback) {
         SELECT c.post_id, JSONB_AGG(JSONB_BUILD_OBJECT(
             'comment_id', c.comment_id,
             'username', u.first_name,
+            'user_id', u.user_id,
             'text', c.comment,
             'avatar', u.avatar,
             'created_at', c.created_at

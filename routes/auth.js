@@ -29,7 +29,7 @@ router.post('/signup',
   }
         
         const token = jwt.sign({
-          exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7),
+          exp: Math.floor(Date.now() / 1000) + (60 * 60),
           email: newUser.email  
         }, process.env.JWT_SECRET);
 

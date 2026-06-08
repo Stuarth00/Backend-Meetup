@@ -1,7 +1,7 @@
 require('dotenv').config();
 var express = require('express');
 const cloudinary = require('cloudinary').v2;
-const { getAccount, editAccount, getUsers } = require('../db/user_request');
+const { getAccount, editAccount } = require('../db/user_request');
 var router = express.Router();
 
 cloudinary.config({
@@ -58,14 +58,6 @@ router.put('/edit', function(req, res, next) {
   } else {
     processUpdate();
   }
-});
-
-router.get('/get-all-users', function (req, res, next) {
-  getUsers( (err, user) => {
-    if(err) { return next(err);}
-    if(!user.length){ return res.json(user);}
-    res.send(user);
-  });
 });
 
 module.exports = router;

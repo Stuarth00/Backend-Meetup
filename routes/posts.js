@@ -52,7 +52,7 @@ router.delete('/delete/:id/post', function(req, res, next) {
     if(err) { 
       return next(err);
     }
-    console.log(data);
+
     res.json(data);
   })
 });

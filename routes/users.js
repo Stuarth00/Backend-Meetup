@@ -1,7 +1,7 @@
 require('dotenv').config();
 var express = require('express');
 const cloudinary = require('cloudinary').v2;
-const { getAccount, editAccount } = require('../db/user_request');
+const { getAccount, editAccount, deleteUser } = require('../db/user_request');
 var router = express.Router();
 
 cloudinary.config({
@@ -58,6 +58,16 @@ router.put('/edit', function(req, res, next) {
   } else {
     processUpdate();
   }
+});
+
+router.delete('/delete/me', function(req, res, next) {
+  const email = req.auth.email;
+
+  deleteUser(email, (err, data) => {
+    if(err) { return next(err); }
+
+    res.json(data);
+  })
 });
 
 module.exports = router;

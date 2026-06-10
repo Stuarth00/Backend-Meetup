@@ -98,6 +98,15 @@ function getFollowingList(user, callback){
         .catch(error => callback(error, null));
 }
 
+function deleteUser(email, callback) {
+    db.any(`
+        DELETE FROM users
+        WHERE email = $1
+        `, email)
+    .then(data => callback(null, data))
+    .catch(error => { callback(error, null) });
+}
+
 module.exports = {
     getUsers,
     getUserById,
@@ -106,4 +115,5 @@ module.exports = {
     editAccount,
     getFollowersList,
     getFollowingList,
+    deleteUser,
 };

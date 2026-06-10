@@ -31,6 +31,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256']}).unless({path: 
   ['/api/auth/signup', 
   '/api/auth/login', 

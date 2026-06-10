@@ -279,10 +279,27 @@ function getPostById(post_id, callback){
     });
 }
 
+function deletePost(email, post_id, callback) { 
+    db.any(`
+        DELETE FROM posts
+        WHERE post_id = $1
+        AND author_id = (
+            SELECT user_id
+            FROM users
+            WHERE email = $2
+        )
+        `, [post_id, email])
+    .then(data => callback(null, data))
+    .catch(error => { 
+        callback(error, null)
+    });
+}
+
 module.exports = {
     createPost,
     getMyPost,
     getAllPosts,
     getPostById,
     getPostByUserId,
+    deletePost,
 }

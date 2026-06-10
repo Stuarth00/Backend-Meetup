@@ -11,8 +11,6 @@ router.post('/:id/toggle-like', function(req, res, next){
             console.log('ERROR', err);
             return next(err); }
         res.json(result);
-        console.log(result);
-        console.log('Like toggled successfully:', { success: result.success, likesCount: result.likesCount, is_liked: result.is_liked });
     });
 });
 
@@ -21,7 +19,6 @@ router.get('/:id/likes', function(req, res, next){
 
     getLikesList(post_id, (err, data) => {
         if(err) { 
-            console.log('ERROR', err);
             return next(err); }
         res.json(data);
     });

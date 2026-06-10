@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-process.stdout.write("WWW FILE STARTED\n");
 /**
  * Module dependencies.
  */

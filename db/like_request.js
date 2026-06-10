@@ -44,7 +44,6 @@ function getLikesList(post_id, callback) {
         JOIN users u ON l.user_id = u.user_id WHERE l.post_id = $1`, [post_id])
     .then(data => callback(null, data))
     .catch(error => {
-        console.log('ERROR', error);
         callback(error, null);
     });
 }

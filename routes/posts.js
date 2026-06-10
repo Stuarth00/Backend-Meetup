@@ -1,7 +1,7 @@
 require('dotenv').config();
 var express = require('express');
 const cloudinary = require('cloudinary').v2;
-const { createPost, getMyPost, getPostByUserId } = require('../db/post_request');
+const { createPost, getMyPost, deletePost } = require('../db/post_request');
 var router = express.Router();
 
 //Cloudinary configuration 
@@ -42,6 +42,19 @@ router.get('/me-posts', function(req, res, next) {
 
     res.json(posts);
   });
+});
+
+router.delete('/delete/:id/post', function(req, res, next) {
+  const email = req.auth.email;
+  const post_id = req.params.id;
+
+  deletePost(email, post_id, (err, data) => {
+    if(err) { 
+      return next(err);
+    }
+    console.log(data);
+    res.json(data);
+  })
 });
 
 

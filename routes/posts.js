@@ -1,7 +1,7 @@
 require('dotenv').config();
 var express = require('express');
 const cloudinary = require('cloudinary').v2;
-const { createPost, getMyPost, deletePost } = require('../db/post_request');
+const { createPost, updatePost, getMyPost, deletePost } = require('../db/post_request');
 var router = express.Router();
 
 //Cloudinary configuration 
@@ -32,6 +32,29 @@ router.post('/create-post', function(req, res, next) {
   })
   .catch(err => next(err));
 })
+
+//Editing a post
+router.put('/:id/edit-post', function(req, res, next) {
+  const post_id = req.params.id;
+  const { description, media } = req.body; 
+
+  const uploadPromises = media.map(item => {
+    if(item.startsWith('data:image')) {
+      return cloudinary.uploader.upload(item).then(result => result.secure_url);
+    } else {
+      return Promise.resolve(item);
+    }
+  });
+
+  Promise.all(uploadPromises)
+  .then(finalUrls => {
+    updatePost(post_id, description, finalUrls, (err, data) => {
+      if(err) { return next(err); }
+      res.json(data);
+    });
+  })
+  .catch(err => next(err));
+});
 
 router.get('/me-posts', function(req, res, next) { 
   const email = req.auth.email; 

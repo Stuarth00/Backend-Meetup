@@ -11,27 +11,24 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* GET users listing. */
+//Creating a post
 router.post('/create-post', function(req, res, next) { 
   const email = req.auth.email;
-  const { description, image_base64 } = req.body;
+  const { description, media } = req.body; 
 
-  cloudinary.uploader.upload(image_base64)
-  .then(upload_result => {
-    const post_data = {
-      description, 
-    };
-  createPost(
-    email,
-    description,
-    [upload_result.secure_url],
-    (err, data) => {
-    if (err) return next(err);
-    res.json(data);
-  });
+  const uploadPromises = media.map(base64 => 
+    cloudinary.uploader.upload(base64).then(result => result.secure_url)
+  );
+
+  Promise.all(uploadPromises)
+  .then(mediaUrls => {
+    createPost(email, description, mediaUrls, (err, data) => {
+      if(err) return next(err);
+      res.json(data);
+    });
   })
   .catch(err => next(err));
-})
+});
 
 //Editing a post
 router.put('/:id/edit-post', function(req, res, next) {

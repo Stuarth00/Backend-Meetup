@@ -14,14 +14,14 @@ router.post('/:id/toggle-like', function(req, res, next){
     });
 });
 
-router.get('/:id/likes', function(req, res, next){
-    const post_id = req.params.id;
+// router.get('/:id/likes', function(req, res, next){
+//     const post_id = req.params.id;
 
-    getLikesList(post_id, (err, data) => {
-        if(err) { 
-            return next(err); }
-        res.json(data);
-    });
-});
+//     getLikesList(post_id, (err, data) => {
+//         if(err) { 
+//             return next(err); }
+//         res.json(data);
+//     });
+// });
 
 module.exports = router; 

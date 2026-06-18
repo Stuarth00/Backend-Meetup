@@ -1,6 +1,7 @@
 var express = require('express');
 const { getUserById, getFollowersList, getFollowingList, getUsers } = require('../db/user_request');
 const { getPostById, getAllPosts, getPostByUserId } = require('../db/post_request');
+const { getLikesList } = require('../db/like_request');
 var router = express.Router();
 
 router.get('/users/:id', function(req, res, next) {
@@ -64,6 +65,7 @@ router.get('/:id/follows', function(req, res, next) {
   }
 });
 
+//Get list of all userse
 router.get('/get-all-users', function (req, res, next) {
   getUsers( (err, user) => {
     if(err) { return next(err);}
@@ -73,6 +75,7 @@ router.get('/get-all-users', function (req, res, next) {
 });
 
 
+//Get all psots for HomeFeed
 router.get('/all-posts', function(req, res, next) { 
   getAllPosts((err, posts) => {
     if(err) { return next(err); }
@@ -81,5 +84,15 @@ router.get('/all-posts', function(req, res, next) {
   });
 });
 
+//Get list of likes for a post
+router.get('/:id/likes', function(req, res, next){
+    const post_id = req.params.id;
+
+    getLikesList(post_id, (err, data) => {
+        if(err) { 
+            return next(err); }
+        res.json(data);
+    });
+});
 
 module.exports = router;

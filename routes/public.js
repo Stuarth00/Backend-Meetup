@@ -26,8 +26,7 @@ router.get('/posts/:post_id', function(req, res, next) {
 
         if(!post.length) { return res.json([]); }
 
-        res.json(post[0])
-        console.log(post[0]);
+        res.json(post[0]);
     })
 })
 
